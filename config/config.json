@@ -1,0 +1,36 @@
+{
+  "project_name" : "test_project",
+  "pattern": ".",
+  "debug": true,
+  "recursive": true,
+  "poll_rate": 1,
+  "file_log" : {
+    "enabled" : true,
+    "logger_name" : "file_watcher",
+    "file_name": "/var/log/file_watcher.log",
+    "basic_format": "%(asctime)-15s %(message)s"
+  },
+  "email_log" : {
+    "enabled" : true,
+    "to" : [
+      "davi.verheul@supportdesk.nu"
+    ],
+    "subject": "A File or Directory has been changed in %s",
+    "from" : "changebot@daemon.nl",
+    "mode": "smtp",
+    "template_file": "./config/emailTemplate.txt",
+    "smtp": {
+      "host": "",
+      "username": "",
+      "password": "",
+      "port": ""
+    },
+    "created_pattern": "%(indent)s created %(type)s [%(path)s] at %(time)s %(eol)s",
+    "modified_pattern": "%(indent)s modified %(type)s [%(path)s] at %(time)s %(eol)s",
+    "deleted_pattern": "%(indent)s removed %(type)s [%(path)s] was at %(time)s %(eol)s",
+    "moved_pattern": "%(indent)s moved %(type)s from [%(path)s] to [%(to)s] at %(time)s %(eol)s"
+  },
+  "cache_max_size": 10,
+  "cache_timeout": 10,
+  "time_format": "%c"
+}

@@ -1,0 +1,19 @@
+Hello,
+
+This is the file watcher for %(project_name)s.
+The following event types have occurs:
+    %(events)s
+
+The following changes occoured.
+    Modified:
+    %(modified)s
+    Deleted:
+    %(deleted)s
+    Created:
+    %(created)s
+    Moved:
+    %(moved)s
+
+
+With kind regards,
+Your neighborhood file-stalker daemon
