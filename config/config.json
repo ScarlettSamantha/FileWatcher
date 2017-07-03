@@ -34,7 +34,7 @@
     "deleted_pattern": "%(indent)s removed %(type)s [%(path)s] was at %(time)s %(eol)s",
     "moved_pattern": "%(indent)s moved %(type)s from [%(path)s] to [%(to)s] at %(time)s %(eol)s"
   },
-  "cache_max_size": 10,
+  "cache_max_size": 100,
   "cache_timeout": 10,
   "time_format": "%c"
 }
