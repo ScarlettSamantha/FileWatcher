@@ -1,10 +1,9 @@
 {
   "project_name" : "test_project",
   "pattern": [
-    ".",
-    "../test/"
+    "."
   ],
-  "debug": true,
+  "debug": false,
   "recursive": true,
   "poll_rate": 1,
   "file_log" : {
