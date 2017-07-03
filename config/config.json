@@ -1,6 +1,9 @@
 {
   "project_name" : "test_project",
-  "pattern": ".",
+  "pattern": [
+    ".",
+    "../test/"
+  ],
   "debug": true,
   "recursive": true,
   "poll_rate": 1,
@@ -8,6 +11,7 @@
     "enabled" : true,
     "logger_name" : "file_watcher",
     "file_name": "/var/log/file_watcher.log",
+    "debug_file_name": "/tmp/debug_file_watcher.log",
     "basic_format": "%(asctime)-15s %(message)s"
   },
   "email_log" : {
