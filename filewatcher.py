@@ -16,13 +16,13 @@ import dict_digger
 from watchdog.events import FileSystemEventHandler, EVENT_TYPE_MOVED
 from watchdog.observers import Observer
 
-__author__ = "Davi Verheul"
+__author__ = "Scarlett Verheul"
 __copyright__ = "SupportDesk B.V 2017"
-__credits__ = ["Davi Verheul"]
+__credits__ = ["Scarlett Verheul"]
 
 __version__ = "1.0.0"
-__maintainer__ = "Davi Verheul"
-__email__ = "davi.verheul@supportdesk.nu"
+__maintainer__ = "Scarlett Verheul"
+__email__ = "scarlett@supportdesk.nu"
 __status__ = "production"
 
 
@@ -280,7 +280,15 @@ class EventHandler(FileSystemEventHandler):
         Logs the events cache to a log file
         :return: 
         """
-        logging.basicConfig(filename=self.config.get(('file_log', 'file_name')),
+        if self.config.get('debug'):
+            file_name = self.config.get(('file_log', 'debug_file_name'))
+        else:
+            file_name = self.config.get(('file_log', 'file_name'))
+
+        if self.config.get('debug'):
+            print('Logging to %s' % file_name)
+
+        logging.basicConfig(filename=file_name,
                             format=self.config.get(('file_log', 'basic_format')))
         logger = logging.getLogger(self.config.get(('file_log', 'logger_name')))
         for event in self.events_to_log_rule(self.event_cache):
@@ -394,6 +402,7 @@ class FileWatcherDaemon(Daemon):
         self.event_handler = None
         self.observer = None
         self.pid_file = pid_file
+        self.debug = False
 
     def run(self):
         try:
@@ -403,7 +412,15 @@ class FileWatcherDaemon(Daemon):
             exit(1)
         self.observer = Observer()
         self.event_handler = EventHandler(self.config)
-        self.observer.schedule(self.event_handler, self.config.get('pattern'), self.config.get('recursive'))
+        if self.debug:
+            self.config.set('debug', self.debug)
+        if isinstance(self.config.get('pattern'), list):
+            for watch_pattern in self.config.get('pattern'):
+                if self.isDebugging():
+                    print("Initializing watcher on pattern %s" % watch_pattern)
+                self.observer.schedule(self.event_handler, watch_pattern, self.config.get('recursive'))
+        else:
+            self.observer.schedule(self.event_handler, self.config.get('pattern'), self.config.get('recursive'))
         self.observer.start()
         try:
             while True:
@@ -416,3 +433,6 @@ class FileWatcherDaemon(Daemon):
 
     def tick(self):
         self.event_handler.cache_tick()
+
+    def isDebugging(self):
+        return self.debug

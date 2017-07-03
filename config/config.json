@@ -1,13 +1,16 @@
 {
   "project_name" : "test_project",
-  "pattern": ".",
-  "debug": true,
+  "pattern": [
+    "."
+  ],
+  "debug": false,
   "recursive": true,
   "poll_rate": 1,
   "file_log" : {
     "enabled" : true,
     "logger_name" : "file_watcher",
     "file_name": "/var/log/file_watcher.log",
+    "debug_file_name": "/tmp/debug_file_watcher.log",
     "basic_format": "%(asctime)-15s %(message)s"
   },
   "email_log" : {
@@ -30,7 +33,7 @@
     "deleted_pattern": "%(indent)s removed %(type)s [%(path)s] was at %(time)s %(eol)s",
     "moved_pattern": "%(indent)s moved %(type)s from [%(path)s] to [%(to)s] at %(time)s %(eol)s"
   },
-  "cache_max_size": 10,
+  "cache_max_size": 100,
   "cache_timeout": 10,
   "time_format": "%c"
 }
