@@ -10,11 +10,13 @@ import signal
 import smtplib
 import sys
 import time
+import random
 from email.message import EmailMessage
 
 import dict_digger
 from watchdog.events import FileSystemEventHandler, EVENT_TYPE_MOVED
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver
+from watchdog.observers.inotify import InotifyObserver
 
 __author__ = "Scarlett Verheul"
 __copyright__ = "SupportDesk B.V 2017"
@@ -189,7 +191,7 @@ class Config(object):
         if isinstance(key, str):
             key = (key,)
         result = dict_digger.dig(self.data, *key)
-        if not result:
+        if result is None:
             if isinstance(key, (tuple, dict, list)):
                 raise KeyError("Could not find requested key '%s' in configuration" % '.'.join(key))
             else:
@@ -224,6 +226,8 @@ class EventHandler(FileSystemEventHandler):
     TAB = '\t'
     TAB_TAB = '\t\t'
 
+    CACHE_KEY_LENGTH = 7
+
     def __init__(self, config):
         super(FileSystemEventHandler, self).__init__()
         if not isinstance(config, Config):
@@ -237,11 +241,16 @@ class EventHandler(FileSystemEventHandler):
 
     def on_any_event(self, event):
         """
-        This function will be called when a event is recieved.
+        This function will be called when a event is received.
         :param event: 
         :return: 
         """
-        self.event_cache[str(self.time_to_ms(time.time()))] = event
+        cache_key = str(self.time_to_ms(time.time())) + str(random.randrange(int('1' + ('0' * (self.CACHE_KEY_LENGTH - 1))) , int('9' * self.CACHE_KEY_LENGTH)))
+
+        if self.config.get('debug'):
+            print(event)
+            print(cache_key)
+        self.event_cache[cache_key] = event
         self.last_detection = self.time_to_ms(time.time())
 
     def cache_tick(self):
@@ -332,7 +341,7 @@ class EventHandler(FileSystemEventHandler):
         for micro_time, event in events.items():
             event_pattern = self.config.get(('email_log', '%s_pattern' % event.event_type))
             data[event.event_type] += (
-                event_pattern % {**self.event_to_pattern(event, micro_time),
+                event_pattern % {**self.event_to_pattern(event, micro_time[:-(self.CACHE_KEY_LENGTH)]),
                                  **{'eol': self.EOL, 'indent': self.TAB_TAB}})
         if data.__len__() != 0:
             events = ','.join({k: v for k, v in data.items() if v})
@@ -404,23 +413,53 @@ class FileWatcherDaemon(Daemon):
         self.pid_file = pid_file
         self.debug = False
 
+    @staticmethod
+    def generate_directory_list(path, trim_level = 1):
+        dirlisting = []
+        for root, dirs, files in os.walk(path):
+            if dirs.__len__() == 0:
+                dirlisting.append(root)
+        return dirlisting
+
+    def add_watch(self, pattern, recursive):
+        if self.isDebugging():
+            print("Initializing watcher on pattern %s" % pattern)
+        self.observer.schedule(self.event_handler, pattern + '/', recursive)
+
     def run(self):
         try:
             self.config = Config('./config/config.json')
         except FileNotFoundError:
             print('Could not find config file.')
             exit(1)
-        self.observer = Observer()
+
+        mode = self.config.get('mode')
+
+        print('Daemon is in %s mode' % mode)
+
+        if self.config.get('poll_rate') < 5:
+            print('Poll rate is lower then 5 seconds(%s) this could cause high cpu usage', self.config.get('poll_rate'))
+
+        if mode == 'hypernode' or mode == 'polling':
+            self.observer = PollingObserver(self.config.get('poll_rate'))
+        elif mode == 'git' or mode == 'inotify':
+            self.observer = InotifyObserver(self.config.get('poll_rate'))
+
+        print('Using %s observer' % str(self.observer.__class__.__name__))
+
         self.event_handler = EventHandler(self.config)
         if self.debug:
             self.config.set('debug', self.debug)
         if isinstance(self.config.get('pattern'), list):
             for watch_pattern in self.config.get('pattern'):
-                if self.isDebugging():
-                    print("Initializing watcher on pattern %s" % watch_pattern)
-                self.observer.schedule(self.event_handler, watch_pattern, self.config.get('recursive'))
+                if self.config.get('mode') == 'git':
+                    for directory_path in self.generate_directory_list(watch_pattern):
+                        self.add_watch(directory_path, False)
+                else:
+                    self.add_watch(watch_pattern, self.config.get('recursive'))
         else:
             self.observer.schedule(self.event_handler, self.config.get('pattern'), self.config.get('recursive'))
+        print('Started observing')
         self.observer.start()
         try:
             while True:

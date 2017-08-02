@@ -3,9 +3,10 @@
   "pattern": [
     "."
   ],
+  "mode": "hypernode",
   "debug": false,
   "recursive": true,
-  "poll_rate": 1,
+  "poll_rate": 20,
   "file_log" : {
     "enabled" : true,
     "logger_name" : "file_watcher",
@@ -34,6 +35,6 @@
     "moved_pattern": "%(indent)s moved %(type)s from [%(path)s] to [%(to)s] at %(time)s %(eol)s"
   },
   "cache_max_size": 100,
-  "cache_timeout": 10,
+  "cache_timeout": 30,
   "time_format": "%c"
 }
