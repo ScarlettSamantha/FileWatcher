@@ -5,13 +5,13 @@ from sys import exit, argv
 
 from filewatcher import FileWatcherDaemon
 
-__author__ = "Davi Verheul"
+__author__ = "Scarlett Verheul"
 __copyright__ = "SupportDesk B.V 2017"
-__credits__ = ["Davi Verheul"]
+__credits__ = ["Scarlett Verheul"]
 
-__version__ = "1.0.0"
-__maintainer__ = "Davi Verheul"
-__email__ = "davi.verheul@supportdesk.nu"
+__version__ = "1.1.0"
+__maintainer__ = "Scarlett Verheul"
+__email__ = "scarlett@supportdesk.nu"
 __status__ = "production"
 
 
