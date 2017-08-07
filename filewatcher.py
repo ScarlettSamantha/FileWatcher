@@ -228,6 +228,44 @@ class EventHandler(FileSystemEventHandler):
 
     CACHE_KEY_LENGTH = 7
 
+    @staticmethod
+    def time_to_ms(time_value: int):
+        """
+        Will convert a current timestamp to one with microseconds
+        :param time_value: int
+        :return: int
+        """
+        return int(round(time_value * 1000.0, 0))
+
+    @staticmethod
+    def ms_to_time(time_value: int, pattern: str):
+        """
+        Will convert microsecond timestamp back to normal timestamp
+        :param time_value: int
+        :param pattern: str
+        :return: str
+        """
+        return str(time.strftime(pattern, time.localtime(round((time_value / 1000.0), 0))))
+
+    @classmethod
+    def strip_cache_key(cls, key):
+        """
+        Will strip a generated cache key of its random components.
+        :param key: str
+        :return: str
+        """
+        return key[:-(cls.CACHE_KEY_LENGTH)]
+
+
+    @classmethod
+    def generate_cache_key(cls):
+        """
+        Will generate a valid length cache key.
+        :return: str
+        """
+        return str(cls.time_to_ms(time.time())) + str(
+            random.randrange(int('1' + ('0' * (cls.CACHE_KEY_LENGTH - 1))), int('9' * cls.CACHE_KEY_LENGTH)))
+
     def __init__(self, config):
         super(FileSystemEventHandler, self).__init__()
         if not isinstance(config, Config):
@@ -245,7 +283,7 @@ class EventHandler(FileSystemEventHandler):
         :param event: 
         :return: 
         """
-        cache_key = str(self.time_to_ms(time.time())) + str(random.randrange(int('1' + ('0' * (self.CACHE_KEY_LENGTH - 1))) , int('9' * self.CACHE_KEY_LENGTH)))
+        cache_key = self.generate_cache_key()
 
         if self.config.get('debug'):
             print(event)
@@ -341,7 +379,7 @@ class EventHandler(FileSystemEventHandler):
         for micro_time, event in events.items():
             event_pattern = self.config.get(('email_log', '%s_pattern' % event.event_type))
             data[event.event_type] += (
-                event_pattern % {**self.event_to_pattern(event, micro_time[:-(self.CACHE_KEY_LENGTH)]),
+                event_pattern % {**self.event_to_pattern(event, self.strip_cache_key(micro_time)),
                                  **{'eol': self.EOL, 'indent': self.TAB_TAB}})
         if data.__len__() != 0:
             events = ','.join({k: v for k, v in data.items() if v})
@@ -357,7 +395,7 @@ class EventHandler(FileSystemEventHandler):
         data = []
         for micro_time, event in events.items():
             event_pattern = self.config.get(('email_log', '%s_pattern' % event.event_type))
-            data.append((event_pattern % {**self.event_to_pattern(event, micro_time), **{'eol': '', 'indent': ''}}))
+            data.append((event_pattern % {**self.event_to_pattern(event, self.strip_cache_key(micro_time)), **{'eol': '', 'indent': ''}}))
         return sorted(data)
 
     def event_to_pattern(self, event, time_value: str):
@@ -373,25 +411,6 @@ class EventHandler(FileSystemEventHandler):
             'to': event.dest_path if event.event_type == EVENT_TYPE_MOVED else None,
             'type': self.DIRECTORY_IDENTIFIER if event.is_directory else self.FILE_IDENTIFIER
         }
-
-    @staticmethod
-    def time_to_ms(time_value: int):
-        """
-        Will convert a current timestamp to one with microseconds
-        :param time_value: int
-        :return: int
-        """
-        return int(round(time_value * 1000.0, 0))
-
-    @staticmethod
-    def ms_to_time(time_value: int, pattern: str):
-        """
-        Will convert microsecond timestamp back to normal timestamp
-        :param time_value: int
-        :param pattern: str
-        :return: str
-        """
-        return str(time.strftime(pattern, time.localtime(round((time_value / 1000.0), 0))))
 
     def get_email_template(self):
         """
