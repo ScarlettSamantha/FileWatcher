@@ -1,7 +1,7 @@
 {
   "project_name" : "test_project",
   "pattern": [
-    "."
+    "../app"
   ],
   "mode": "hypernode",
   "debug": false,
@@ -17,7 +17,7 @@
   "email_log" : {
     "enabled" : true,
     "to" : [
-      "davi.verheul@supportdesk.nu"
+      "scarlett@arcane-tech.nl"
     ],
     "subject": "A File or Directory has been changed in %s",
     "from" : "changebot@daemon.nl",
